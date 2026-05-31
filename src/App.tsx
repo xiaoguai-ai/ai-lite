@@ -7,7 +7,7 @@ import { LangContext, useT, makeT, type Lang } from "./i18n";
 import "./App.css";
 
 type Tab = "install" | "api" | "keys" | "history" | "diagnostics";
-type InstallState = "checking" | "installed" | "missing";
+type InstallState = "idle" | "checking" | "installed" | "missing";
 
 interface SavedConfig {
   id: string;
@@ -204,14 +204,6 @@ function InstallCenter() {
       return next;
     });
   };
-
-  useEffect(() => {
-    for (const group of TOOL_GROUPS) {
-      for (const tool of group.tools) {
-        void refreshTool(tool);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -469,9 +461,10 @@ function InstallCenter() {
   const renderCard = (t: Tool) => {
     const installable = Boolean(installCommand(t));
     const unsupported = !installable;
-    const state = installStates[t.id] ?? "checking";
+    const state = installStates[t.id] ?? "idle";
     const installed = state === "installed";
     const checking = state === "checking";
+    const idle = state === "idle";
     const fav = favorites.includes(t.id);
     return (
       <div key={t.id} className="card">
@@ -488,6 +481,7 @@ function InstallCenter() {
             {t.needsNode && <em className="tag">{tr("needNode")}</em>}
             {t.downloadUrl && <em className="tag download">{tr("hasDownload")}</em>}
             {checking && <em className="tag">{tr("checking")}</em>}
+            {idle && <em className="tag">{tr("notChecked")}</em>}
             {installed && <em className="tag installed">{tr("installed")}</em>}
             {installed && versions[t.id] && <em className="tag">{versions[t.id]}</em>}
             {unsupported && !installed && <em className="tag warn">{tr("onlyDownload")}</em>}
@@ -517,7 +511,10 @@ function InstallCenter() {
           <details className="menu">
             <summary>{tr("menu")}</summary>
             <div className="menu-list">
-              {!installed && (
+              <button disabled={busy !== null || checking} onClick={() => void refreshTool(t)}>
+                {checking ? tr("checking") : tr("detect")}
+              </button>
+              {!installed && !idle && (
                 <button disabled={busy !== null || unsupported || checking} onClick={() => void install(t)}>
                   {busy === t.id ? tr("installing") : checking ? tr("checking") : tr("install")}
                 </button>
@@ -988,7 +985,6 @@ function DiagnosticsPage() {
   };
 
   useEffect(() => {
-    void run();
     void loadLog("relay");
   }, []);
 

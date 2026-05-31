@@ -6,6 +6,12 @@ use sha2::{Digest, Sha256};
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
+// Windows 下隐藏后台子进程的控制台窗口，避免检测时疯狂弹出 cmd/powershell 黑窗。
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
 #[cfg(target_os = "macos")]
 fn escape_applescript(value: &str) -> String {
     value
@@ -108,6 +114,7 @@ fn command_exists(commands: Vec<String>) -> Result<bool, String> {
         #[cfg(target_os = "windows")]
         let output = std::process::Command::new("where")
             .arg(command)
+            .creation_flags(CREATE_NO_WINDOW)
             .output()
             .map_err(|e| format!("检测命令失败: {}", e))?;
 
@@ -147,6 +154,7 @@ fn get_tool_version(command: String) -> Result<String, String> {
     #[cfg(target_os = "windows")]
     let output = std::process::Command::new(command)
         .arg("--version")
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
         .map_err(|e| format!("执行失败: {}", e))?;
 

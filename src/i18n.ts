@@ -27,6 +27,8 @@ export const STRINGS: Record<string, { zh: string; en: string }> = {
   install: { zh: "安装", en: "Install" },
   installing: { zh: "安装中…", en: "Installing…" },
   checking: { zh: "检测中…", en: "Checking…" },
+  detect: { zh: "检测", en: "Detect" },
+  notChecked: { zh: "未检测", en: "Not checked" },
   open: { zh: "打开", en: "Open" },
   opening: { zh: "打开中…", en: "Opening…" },
   uninstall: { zh: "卸载", en: "Uninstall" },
